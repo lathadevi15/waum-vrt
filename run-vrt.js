@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const { percySnapshot } = require('@percy/playwright');
 
 (async () => {
-  const siteUrl = process.env.SITE_URL;
+  const siteUrl = process.env.SITE_URL.trim();
+
+  // Split safely for both Windows and Linux line endings
   const pages = process.env.PAGES
-    .split('\n')
+    .split(/\r?\n/)
     .map(p => p.trim())
     .filter(Boolean);
 
@@ -15,12 +17,20 @@ const { percySnapshot } = require('@percy/playwright');
     headless: true
   });
 
-  const page = await browser.newPage();
+  const page = await browser.newPage({
+    viewport: {
+      width: 1280,
+      height: 720
+    }
+  });
 
   for (const path of pages) {
     const url = new URL(path, siteUrl).toString();
+
     const snapshotName =
-      path === '/' ? 'home' : path.replace(/[^\w]/g, '-');
+      path === '/'
+        ? 'home'
+        : path.replace(/^\/|\/$/g, '').replace(/[^\w-]+/g, '-');
 
     console.log('Opening:', url);
 
