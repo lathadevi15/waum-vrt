@@ -2,13 +2,11 @@ const { chromium } = require('playwright');
 const { percySnapshot } = require('@percy/playwright');
 
 (async () => {
-  const siteUrl = process.env.SITE_URL.trim();
+  // Normalize site URL (remove trailing slash)
+  const siteUrl = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+
+  // Read pages input and support both literal \n and real line breaks
   const rawPages = process.env.PAGES || '';
-
-  console.log('Site URL:', siteUrl);
-  console.log('Raw Pages Input:', JSON.stringify(rawPages));
-
-  // Support both real new lines and literal \n sequences
   const normalizedPages = rawPages.replace(/\\n/g, '\n');
 
   const pages = normalizedPages
@@ -16,6 +14,7 @@ const { percySnapshot } = require('@percy/playwright');
     .map(p => p.trim())
     .filter(Boolean);
 
+  console.log('Site URL:', siteUrl);
   console.log('Parsed Pages:', pages);
 
   const browser = await chromium.launch({ headless: true });
@@ -27,17 +26,24 @@ const { percySnapshot } = require('@percy/playwright');
   });
 
   for (const path of pages) {
-    const url = new URL(path, siteUrl).toString();
+    // Ensure page path starts with /
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
 
+    // Build full URL manually
+    const fullUrl = siteUrl + cleanPath;
+
+    // Create snapshot name
     const snapshotName =
-      path === '/'
+      cleanPath === '/'
         ? 'home'
-        : path.replace(/^\/|\/$/g, '').replace(/[^\w-]+/g, '-');
+        : cleanPath
+            .replace(/^\/|\/$/g, '')
+            .replace(/[^\w-]+/g, '-');
 
-    console.log('Opening:', url);
+    console.log('Opening:', fullUrl);
     console.log('Capturing snapshot:', snapshotName);
 
-    await page.goto(url, {
+    await page.goto(fullUrl, {
       waitUntil: 'networkidle',
       timeout: 60000
     });
