@@ -1,0 +1,33 @@
+name: Percy Visual Regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        required: true
+        type: string
+      pages:
+        required: true
+        type: string
+
+jobs:
+  vrt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npx playwright install --with-deps
+
+      - name: Run Percy
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+          SITE_URL: ${{ github.event.inputs.site_url }}
+          PAGES: ${{ github.event.inputs.pages }}
+        run: npx percy exec -- node run-vrt.js
