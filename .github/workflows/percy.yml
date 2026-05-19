@@ -4,11 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       site_url:
+        description: 'Website URL'
         required: true
         type: string
+
       pages:
+        description: 'Pages to test (one URL per line)'
         required: true
         type: string
+        default: |
+          /
+          /about-us/
+          /blog/
 
 jobs:
   vrt:
