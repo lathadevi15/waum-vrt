@@ -9,13 +9,19 @@ on:
         type: string
 
       pages:
-        description: 'Pages to test (one URL per line)'
+        description: 'Pages to test'
         required: true
         type: string
         default: |
           /
           /about-us/
           /blog/
+
+      phase:
+        description: 'before or after updates'
+        required: false
+        default: 'manual'
+        type: string
 
 jobs:
   vrt:
@@ -37,4 +43,5 @@ jobs:
           PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
           SITE_URL: ${{ github.event.inputs.site_url }}
           PAGES: ${{ github.event.inputs.pages }}
+          PHASE: ${{ github.event.inputs.phase }}
         run: npx percy exec -- node run-vrt.js
